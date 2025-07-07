@@ -1,74 +1,59 @@
+# app.py
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import plotly.express as px
+from PIL import Image
+import os
 
-st.set_page_config(page_title="EDA Dashboard", layout="wide")
+st.set_page_config(page_title="Dashboard Diabetes", layout="wide")
 
-st.title("📊 EDA Dashboard Interaktif")
+# Load data
+url = "https://raw.githubusercontent.com/dyt08/diabetes-prediction/refs/heads/main/dataset/Dataset%20of%20Diabetes.csv"
+df = pd.read_csv(url)
 
-# Upload
-uploaded_file = st.file_uploader("Unggah file CSV kamu", type=["csv"])
+# Title
+st.title("🩺 Dashboard Interaktif Analisis Diabetes")
 
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+# Tabs Navigasi
+tab1, tab2, tab3, tab4 = st.tabs(["📄 Dataset", "📊 Statistik", "📈 Visualisasi", "☁️ WordCloud"])
 
-    st.subheader("🔍 Pratinjau Data")
+# Tab 1 - Data
+with tab1:
+    st.subheader("🧾 Data Sample")
     st.dataframe(df.head())
 
-    st.markdown("---")
+    st.subheader("🔍 Info Kolom")
+    st.write(df.dtypes)
 
-    # Preprocessing sederhana
-    st.subheader("🧼 Preprocessing")
-    st.write("Jumlah nilai kosong per kolom:")
-    st.dataframe(df.isnull().sum())
+    st.subheader("❓ Missing Values")
+    st.write(df.isnull().sum())
 
-    if st.checkbox("Hapus baris dengan nilai kosong"):
-        df.dropna(inplace=True)
-        st.success("✔️ Nilai kosong dihapus")
-
-    st.markdown("---")
-
-    # Statistik deskriptif
+# Tab 2 - Statistik
+with tab2:
     st.subheader("📈 Statistik Deskriptif")
-    st.dataframe(df.describe())
+    st.write(df.describe())
 
-    st.markdown("---")
+    if 'CLASS' in df.columns:
+        st.subheader("📊 Distribusi Kelas")
+        st.bar_chart(df['CLASS'].value_counts())
 
-    # Korelasi
-    st.subheader("🔗 Korelasi antar variabel (numerik)")
-    numeric_df = df.select_dtypes(include='number')
-    if not numeric_df.empty:
-        fig_corr, ax = plt.subplots()
-        sns.heatmap(numeric_df.corr(), annot=True, cmap='coolwarm', ax=ax)
-        st.pyplot(fig_corr)
+# Tab 3 - Visualisasi
+with tab3:
+    st.subheader("🔹 Histogram Distribusi")
+    if os.path.exists("distribusi_fitur.png"):
+        st.image(Image.open("distribusi_fitur.png"), use_column_width=True)
+
+    st.subheader("🔹 Korelasi Antar Fitur")
+    if os.path.exists("korelasi_fitur.png"):
+        st.image(Image.open("korelasi_fitur.png"), use_column_width=True)
+
+    st.subheader("🔹 Boxplot Berdasarkan CLASS")
+    if os.path.exists("boxplot_per_class.png"):
+        st.image(Image.open("boxplot_per_class.png"), use_column_width=True)
+
+# Tab 4 - WordCloud
+with tab4:
+    if 'TEXT' in df.columns and os.path.exists("wordcloud.png"):
+        st.subheader("☁️ WordCloud dari Kolom TEXT")
+        st.image(Image.open("wordcloud.png"), use_column_width=True)
     else:
-        st.info("Data numerik tidak tersedia untuk korelasi.")
-
-    st.markdown("---")
-
-    # Visualisasi interaktif
-    st.subheader("📊 Visualisasi Interaktif")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        x_axis = st.selectbox("Pilih variabel X", df.columns)
-    with col2:
-        y_axis = st.selectbox("Pilih variabel Y", df.columns)
-
-    chart_type = st.radio("Jenis Grafik", ["Scatter", "Line", "Histogram", "Box"])
-
-    if chart_type == "Scatter":
-        fig = px.scatter(df, x=x_axis, y=y_axis)
-    elif chart_type == "Line":
-        fig = px.line(df, x=x_axis, y=y_axis)
-    elif chart_type == "Histogram":
-        fig = px.histogram(df, x=x_axis)
-    elif chart_type == "Box":
-        fig = px.box(df, x=x_axis, y=y_axis)
-
-    st.plotly_chart(fig, use_container_width=True)
-
-else:
-    st.info("⬆️ Silakan unggah file CSV untuk mulai.")
+        st.warning("Tidak ada kolom teks 'TEXT' pada dataset.")
