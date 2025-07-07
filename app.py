@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from PIL import Image
 import os
+import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Diabetes", layout="wide")
 
@@ -55,30 +56,29 @@ with tab2:
     """)
 
 # Tab 3 - Visualisasi
+
 with tab3:
-    st.header("📈 Visualisasi EDA")
+    st.header("📈 Visualisasi EDA Interaktif")
 
-    col1, col2 = st.columns(2)
+    # Ambil kolom numerik
+    numeric_cols = df.select_dtypes(include='number').columns.tolist()
 
-    with col1:
-        st.subheader("🔹 Histogram Distribusi")
-        if os.path.exists("distribusi_fitur.png"):
-            st.image(Image.open("distribusi_fitur.png"), caption="Distribusi Fitur", use_column_width=True)
-        else:
-            st.warning("Gambar distribusi_fitur.png belum dibuat.")
+    # Histogram interaktif
+    fitur_hist = st.selectbox("Pilih fitur untuk histogram:", numeric_cols)
+    fig_hist = px.histogram(df, x=fitur_hist, nbins=30, title=f"Histogram Distribusi {fitur_hist}")
+    st.plotly_chart(fig_hist, use_container_width=True)
 
-        st.subheader("🔹 Korelasi Antar Fitur")
-        if os.path.exists("korelasi_fitur.png"):
-            st.image(Image.open("korelasi_fitur.png"), caption="Heatmap Korelasi", use_column_width=True)
-        else:
-            st.warning("Gambar korelasi_fitur.png belum dibuat.")
+    # Heatmap korelasi interaktif
+    corr = df.corr()
+    fig_heatmap = px.imshow(corr, text_auto=True, aspect="auto", title="Heatmap Korelasi Fitur")
+    st.plotly_chart(fig_heatmap, use_container_width=True)
 
-    with col2:
-        st.subheader("🔹 Boxplot Berdasarkan Outcome")
-        if os.path.exists("boxplot_per_class.png"):
-            st.image(Image.open("boxplot_per_class.png"), caption="Boxplot per Kelas", use_column_width=True)
-        else:
-            st.warning("Gambar boxplot_per_class.png belum dibuat.")
+    # Boxplot berdasarkan Outcome (label target)
+    if 'Outcome' in df.columns:
+        fitur_box = st.selectbox("Pilih fitur untuk boxplot berdasarkan Outcome:", numeric_cols)
+        fig_box = px.box(df, x='Outcome', y=fitur_box, color='Outcome',
+                         title=f"Boxplot {fitur_box} berdasarkan Outcome")
+        st.plotly_chart(fig_box, use_container_width=True)
 
 # Tab 4 - WordCloud
 with tab4:
