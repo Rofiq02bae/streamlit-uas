@@ -3,3 +3,7 @@ pandas
 seaborn
 matplotlib
 plotly
+numpy
+nltk
+wordcloud
+Pillow
